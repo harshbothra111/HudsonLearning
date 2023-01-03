@@ -1,4 +1,5 @@
-﻿using HudsonLearning.Data;
+﻿using Azure.Storage.Blobs;
+using HudsonLearning.Data;
 using HudsonLearning.Helpers;
 using HudsonLearning.Interfaces;
 using HudsonLearning.Services;
@@ -17,6 +18,9 @@ namespace HudsonLearning.Extensions
             {
                 options.UseSqlServer(config.GetConnectionString("DefaultConnection"));
             });
+            services.AddSingleton(x => new BlobServiceClient(
+                config.GetValue<string>("BlobConnection")
+            ));
             return services;
         }
     }

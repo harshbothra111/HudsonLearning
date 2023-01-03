@@ -1,4 +1,6 @@
-﻿using HudsonLearning.Data;
+﻿using Azure.Storage.Blobs.Models;
+using Azure.Storage.Blobs;
+using HudsonLearning.Data;
 using HudsonLearning.DTOs;
 using HudsonLearning.Entities;
 using HudsonLearning.Interfaces;
@@ -20,7 +22,7 @@ namespace HudsonLearning.Controllers
             _tokenService = tokenService;
         }
         [HttpPost("register")]
-        public async Task<ActionResult<UserDto>> Register(RegisterDto registerDto)
+        public async Task<ActionResult<UserDto>> Register(RegisterDto registerDto, IFormFile file)
         {
             if (await UserExists(registerDto.Username)) return BadRequest("Username is taken");
             using var hmac = new HMACSHA512();

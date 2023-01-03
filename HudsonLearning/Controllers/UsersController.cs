@@ -1,4 +1,6 @@
 ﻿using AutoMapper;
+using Azure.Storage.Blobs;
+using Azure.Storage.Blobs.Models;
 using HudsonLearning.DTOs;
 using HudsonLearning.Extensions;
 using HudsonLearning.Interfaces;
@@ -12,11 +14,13 @@ namespace HudsonLearning.Controllers
     {
         private readonly IUserRepository _userRepository;
         private readonly IMapper _mapper;
+        private readonly BlobServiceClient _blobServiceClient;
 
-        public UsersController(IUserRepository userRepository, IMapper mapper)
+        public UsersController(IUserRepository userRepository, IMapper mapper, BlobServiceClient blobServiceClient)
         {
             _userRepository = userRepository;
             _mapper = mapper;
+            _blobServiceClient = blobServiceClient;
         }
 
         [HttpGet]
@@ -40,6 +44,24 @@ namespace HudsonLearning.Controllers
             _userRepository.Update(user);
             if (await _userRepository.SaveAllSync()) return NoContent();
             return BadRequest("Failed to update user");
+        }
+        [HttpPut("add-photo")]
+        public async Task<ActionResult> AddPhoto(IFormFile file)
+        {
+            if (file == null) return BadRequest("Photo not attached");
+            var user = await _userRepository.GetUserByUsernameAsync(User.GetUsername());
+            var fileName = User.GetUsername() + Path.GetExtension(file.FileName);
+            BlobContainerClient blobContainerClient = _blobServiceClient.GetBlobContainerClient("profile-photos");
+            BlobClient blobClient = blobContainerClient.GetBlobClient(fileName);
+            var httpHeaders = new BlobHttpHeaders
+            {
+                ContentType = file.ContentType
+            };
+            await blobClient.UploadAsync(file.OpenReadStream(), httpHeaders);
+            user.PhotoUrl = blobClient.Uri.AbsoluteUri;
+            _userRepository.Update(user);
+            if (await _userRepository.SaveAllSync()) return NoContent();
+            return BadRequest("Problem adding photo");
         }
     }
 }
