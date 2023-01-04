@@ -46,11 +46,11 @@ namespace HudsonLearning.Controllers
             return BadRequest("Failed to update user");
         }
         [HttpPut("add-photo")]
-        public async Task<ActionResult> AddPhoto(IFormFile file)
+        public async Task<ActionResult<string>> AddPhoto(IFormFile file)
         {
             if (file == null) return BadRequest("Photo not attached");
             var user = await _userRepository.GetUserByUsernameAsync(User.GetUsername());
-            var fileName = User.GetUsername() + Path.GetExtension(file.FileName);
+            var fileName = User.GetUsername() + "_" + Guid.NewGuid() + Path.GetExtension(file.FileName);
             BlobContainerClient blobContainerClient = _blobServiceClient.GetBlobContainerClient("profile-photos");
             BlobClient blobClient = blobContainerClient.GetBlobClient(fileName);
             var httpHeaders = new BlobHttpHeaders
@@ -60,7 +60,7 @@ namespace HudsonLearning.Controllers
             await blobClient.UploadAsync(file.OpenReadStream(), httpHeaders);
             user.PhotoUrl = blobClient.Uri.AbsoluteUri;
             _userRepository.Update(user);
-            if (await _userRepository.SaveAllSync()) return NoContent();
+            if (await _userRepository.SaveAllSync()) return Ok(user.PhotoUrl);
             return BadRequest("Problem adding photo");
         }
     }
