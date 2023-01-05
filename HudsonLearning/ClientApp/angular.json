@@ -76,7 +76,8 @@
           "builder": "@angular-devkit/build-angular:dev-server",
           "configurations": {
             "production": {
-              "browserTarget": "HudsonLearning:build:production"
+              "browserTarget": "HudsonLearning:build:production",
+              "proxyConfig": "proxy.conf.js"
             },
             "development": {
               "browserTarget": "HudsonLearning:build:development",
